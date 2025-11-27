@@ -3,11 +3,12 @@
 import { useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { useToast } from '@/components/providers/ToastProvider';
 
 export function ActivityTracker() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const { error } = useToast();
   const lastActivityRef = useRef<number>(Date.now());
   const checkIntervalRef = useRef<NodeJS.Timeout>();
   const timeoutMinutesRef = useRef<number>(15);
@@ -65,7 +66,7 @@ export function ActivityTracker() {
 
       if (inactiveTime >= timeoutMs) {
         // Log out due to inactivity
-        toast.error(`Logged out due to ${timeoutMinutesRef.current} minutes of inactivity`);
+        error(`Logged out due to ${timeoutMinutesRef.current} minutes of inactivity`);
         signOut({ callbackUrl: '/login' });
       } else {
         // Show warning 2 minutes before logout

@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import { useToast } from '@/components/providers/ToastProvider';
 import { LogIn } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { success, error } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<'email' | 'phone'>('email');
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ export default function LoginPage() {
 
   const sendOtp = async () => {
     if (!formData.phone) {
-      toast.error('Enter phone number');
+      error('Enter phone number');
       return;
     }
     setFormData(f => ({ ...f, sendingOtp: true }));
@@ -38,13 +39,13 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success('OTP sent');
+        success('OTP sent');
         setFormData(f => ({ ...f, otpSent: true }));
       } else {
-        toast.error(data.error || 'Failed to send OTP');
+        error(data.error || 'Failed to send OTP');
       }
     } catch (e) {
-      toast.error('Failed to send OTP');
+      error('Failed to send OTP');
     } finally {
       setFormData(f => ({ ...f, sendingOtp: false }));
     }
@@ -73,14 +74,14 @@ export default function LoginPage() {
       }
 
       if (result?.error) {
-        toast.error(result.error);
+        error(result.error);
       } else {
-        toast.success('Login successful!');
+        success('Login successful!');
         router.push('/dashboard');
         router.refresh();
       }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.');
+    } catch (err) {
+      error('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }

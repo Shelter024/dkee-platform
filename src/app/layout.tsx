@@ -5,9 +5,9 @@ import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { ActivityTracker } from '@/components/providers/ActivityTracker';
+import { ToastProvider } from '@/components/providers/ToastProvider';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { Toaster } from 'react-hot-toast';
 import DynamicBackground from '@/components/layout/DynamicBackground';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -64,13 +64,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} theme-transition`}>
         <ThemeProvider>
           <AuthProvider>
-            <ActivityTracker />
-            <DynamicBackground pageType={pageType}>
-              <Navbar />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-            </DynamicBackground>
-            <Toaster position="top-right" />
+            <ToastProvider>
+              <ActivityTracker />
+              <DynamicBackground pageType={pageType}>
+                <Navbar />
+                <main className="flex-grow">{children}</main>
+                <Footer />
+              </DynamicBackground>
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

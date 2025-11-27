@@ -5,7 +5,7 @@ import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import toast from 'react-hot-toast';
+import { useToast } from '@/components/providers/ToastProvider';
 import { Users, Search, Mail, Phone, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,6 +25,7 @@ interface Customer {
 }
 
 export default function CustomersPage() {
+  const { error } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,8 +41,8 @@ export default function CustomersPage() {
         const data = await res.json();
         setCustomers(data);
       }
-    } catch (error) {
-      toast.error('Failed to load customers');
+    } catch (err) {
+      error('Failed to load customers');
     } finally {
       setIsLoading(false);
     }

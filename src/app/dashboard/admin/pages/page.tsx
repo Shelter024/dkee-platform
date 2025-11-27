@@ -9,7 +9,7 @@ import Skeleton from '@/components/ui/Skeleton';
 const RichTextEditor = dynamic(() => import('@/components/editor/RichTextEditor'), { ssr: false, loading: () => <Skeleton lines={8} /> });
 import ImageField from '@/components/media/ImageField';
 import MetaFields from '@/components/cms/MetaFields';
-import { toast } from 'react-hot-toast';
+import { useToast } from '@/components/providers/ToastProvider';
 import {
   Plus,
   Edit,
@@ -48,6 +48,7 @@ interface ContentBlock {
 }
 
 export default function PagesManagement() {
+  const { success, error } = useToast();
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
@@ -96,9 +97,9 @@ export default function PagesManagement() {
       if (!response.ok) throw new Error('Failed to fetch pages');
       const data = await response.json();
       setPages(data);
-    } catch (error) {
-      console.error('Error fetching pages:', error);
-      toast.error('Failed to load pages');
+    } catch (err) {
+      console.error('Error fetching pages:', err);
+      error('Failed to load pages');
     } finally {
       setLoading(false);
     }
@@ -155,7 +156,7 @@ export default function PagesManagement() {
 
   const handleSubmit = async () => {
     if (!title || !slug) {
-      toast.error('Title and slug are required');
+      error('Title and slug are required');
       return;
     }
 
@@ -186,17 +187,17 @@ export default function PagesManagement() {
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to save page');
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to save page');
       }
 
-      toast.success(editingPage ? 'Page updated!' : 'Page created!');
+      success(editingPage ? 'Page updated!' : 'Page created!');
       resetForm();
       setShowEditor(false);
       fetchPages();
-    } catch (error: any) {
-      console.error('Error saving page:', error);
-      toast.error(error.message || 'Failed to save page');
+    } catch (err: any) {
+      console.error('Error saving page:', err);
+      error(err.message || 'Failed to save page');
     }
   };
 
@@ -243,11 +244,11 @@ export default function PagesManagement() {
 
       if (!response.ok) throw new Error('Failed to delete page');
 
-      toast.success('Page deleted');
+      success('Page deleted');
       fetchPages();
-    } catch (error) {
-      console.error('Error deleting page:', error);
-      toast.error('Failed to delete page');
+    } catch (err) {
+      console.error('Error deleting page:', err);
+      error('Failed to delete page');
     }
   };
 
@@ -261,11 +262,11 @@ export default function PagesManagement() {
 
       if (!response.ok) throw new Error('Failed to update page');
 
-      toast.success(page.published ? 'Page unpublished' : 'Page published');
+      success(page.published ? 'Page unpublished' : 'Page published');
       fetchPages();
-    } catch (error) {
-      console.error('Error updating page:', error);
-      toast.error('Failed to update page');
+    } catch (err) {
+      console.error('Error updating page:', err);
+      error('Failed to update page');
     }
   };
 

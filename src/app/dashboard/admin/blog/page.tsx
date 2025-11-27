@@ -9,7 +9,7 @@ import Skeleton from '@/components/ui/Skeleton';
 const RichTextEditor = dynamic(() => import('@/components/editor/RichTextEditor'), { ssr: false, loading: () => <Skeleton lines={10} /> });
 import ImageField from '@/components/media/ImageField';
 import MetaFields from '@/components/cms/MetaFields';
-import { toast } from 'react-hot-toast';
+import { useToast } from '@/components/providers/ToastProvider';
 
 interface BlogPost {
   id: string;
@@ -31,6 +31,7 @@ interface BlogPost {
 }
 
 export default function BlogPage() {
+  const { success, error } = useToast();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
@@ -77,8 +78,8 @@ export default function BlogPage() {
       if (data.ok) {
         setPosts(data.posts);
       }
-    } catch (error) {
-      toast.error('Failed to load posts');
+    } catch (err) {
+      error('Failed to load posts');
     } finally {
       setLoading(false);
     }
@@ -104,16 +105,16 @@ export default function BlogPage() {
       const data = await res.json();
 
       if (data.ok) {
-        toast.success(editingPost ? 'Post updated!' : 'Post created!');
+        success(editingPost ? 'Post updated!' : 'Post created!');
         setShowEditor(false);
         setEditingPost(null);
         resetForm();
         fetchPosts();
       } else {
-        toast.error(data.error || 'Failed to save post');
+        error(data.error || 'Failed to save post');
       }
-    } catch (error) {
-      toast.error('An error occurred');
+    } catch (err) {
+      error('An error occurred');
     } finally {
       setLoading(false);
     }
@@ -152,13 +153,13 @@ export default function BlogPage() {
       const data = await res.json();
 
       if (data.ok) {
-        toast.success('Post deleted');
+        success('Post deleted');
         fetchPosts();
       } else {
-        toast.error('Failed to delete post');
+        error('Failed to delete post');
       }
-    } catch (error) {
-      toast.error('An error occurred');
+    } catch (err) {
+      error('An error occurred');
     }
   };
 
@@ -173,13 +174,13 @@ export default function BlogPage() {
       const data = await res.json();
 
       if (data.ok) {
-        toast.success(post.published ? 'Post unpublished' : 'Post published!');
+        success(post.published ? 'Post unpublished' : 'Post published!');
         fetchPosts();
       } else {
-        toast.error('Failed to update post');
+        error('Failed to update post');
       }
-    } catch (error) {
-      toast.error('An error occurred');
+    } catch (err) {
+      error('An error occurred');
     }
   };
 

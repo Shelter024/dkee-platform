@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import { useToast } from '@/components/providers/ToastProvider';
 import { UserPlus, Mail, Phone } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { success, error } = useToast();
   const [registrationType, setRegistrationType] = useState<'email' | 'phone'>('email');
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,23 +31,23 @@ export default function RegisterPage() {
     // Validation
     if (registrationType === 'email') {
       if (!formData.email || !formData.password) {
-        toast.error('Email and password are required');
+        error('Email and password are required');
         setIsLoading(false);
         return;
       }
       if (formData.password.length < 8) {
-        toast.error('Password must be at least 8 characters');
+        error('Password must be at least 8 characters');
         setIsLoading(false);
         return;
       }
       if (formData.password !== formData.confirmPassword) {
-        toast.error('Passwords do not match');
+        error('Passwords do not match');
         setIsLoading(false);
         return;
       }
     } else {
       if (!formData.phone) {
-        toast.error('Phone number is required');
+        error('Phone number is required');
         setIsLoading(false);
         return;
       }
@@ -68,15 +69,15 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(data.message);
+        success(data.message);
         setRegistered(true);
         setUserId(data.user.id);
       } else {
-        toast.error(data.error || 'Registration failed');
+        error(data.error || 'Registration failed');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      error('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

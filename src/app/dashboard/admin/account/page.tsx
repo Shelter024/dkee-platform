@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useSession } from 'next-auth/react';
-import toast from 'react-hot-toast';
+import { useToast } from '@/components/providers/ToastProvider';
 import CloudinaryUploader from '@/components/media/CloudinaryUploader';
 
 export default function StaffAccountSettingsPage() {
   const { data: session } = useSession();
+  const { success, error } = useToast();
   const [form, setForm] = useState({
     name: session?.user?.name || '',
     email: session?.user?.email || '',
@@ -32,9 +33,9 @@ export default function StaffAccountSettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Update failed');
-      toast.success('Profile updated');
+      success('Profile updated');
     } catch (err: any) {
-      toast.error(err.message);
+      error(err.message);
     } finally {
       setLoading(false);
     }
@@ -51,9 +52,9 @@ export default function StaffAccountSettingsPage() {
     }).then(async (r) => {
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
-        toast.error(j.error || 'Failed to save avatar');
+        error(j.error || 'Failed to save avatar');
       } else {
-        toast.success('Avatar updated');
+        success('Avatar updated');
       }
     });
   }

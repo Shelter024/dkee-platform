@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
-import toast from 'react-hot-toast';
+import { useToast } from '@/components/providers/ToastProvider';
 import { Save, Settings } from 'lucide-react';
 
 interface SessionSettings {
@@ -20,6 +20,7 @@ interface SessionSettings {
 
 export default function SessionSettingsPage() {
   const router = useRouter();
+  const { success, error } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<SessionSettings | null>(null);
@@ -35,10 +36,10 @@ export default function SessionSettingsPage() {
         const data = await res.json();
         setSettings(data);
       } else {
-        toast.error('Failed to load settings');
+        error('Failed to load settings');
       }
-    } catch (error) {
-      toast.error('Error loading settings');
+    } catch (err) {
+      error('Error loading settings');
     } finally {
       setIsLoading(false);
     }
@@ -56,14 +57,14 @@ export default function SessionSettingsPage() {
       });
 
       if (res.ok) {
-        toast.success('Session settings updated successfully');
+        success('Session settings updated successfully');
         await fetchSettings();
       } else {
         const data = await res.json();
-        toast.error(data.error || 'Failed to update settings');
+        error(data.error || 'Failed to update settings');
       }
-    } catch (error) {
-      toast.error('Error updating settings');
+    } catch (err) {
+      error('Error updating settings');
     } finally {
       setIsSaving(false);
     }
