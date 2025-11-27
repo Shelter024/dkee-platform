@@ -8,7 +8,7 @@ import { useToast } from '@/components/providers/ToastProvider';
 export function ActivityTracker() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
-  const { error } = useToast();
+  const { error, warning } = useToast();
   const lastActivityRef = useRef<number>(Date.now());
   const checkIntervalRef = useRef<NodeJS.Timeout>();
   const timeoutMinutesRef = useRef<number>(15);
@@ -72,10 +72,7 @@ export function ActivityTracker() {
         // Show warning 2 minutes before logout
         const timeRemaining = timeoutMs - inactiveTime;
         if (timeRemaining <= 2 * 60 * 1000 && timeRemaining > 1.5 * 60 * 1000) {
-          toast('You will be logged out soon due to inactivity', {
-            icon: '⚠️',
-            duration: 5000,
-          });
+          warning('You will be logged out soon due to inactivity');
         }
       }
     }, 30000); // Check every 30 seconds
