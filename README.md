@@ -102,18 +102,54 @@ prisma/
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
-- `npm start` - Start production server
+- `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm run analyze` - Analyze bundle size with visual report (set ANALYZE=true)
+- `npm run secrets` - Generate secure random secrets for environment variables
 - `npm run db:generate` - Generate Prisma client
 - `npm run db:push` - Push schema to database
 - `npm run db:studio` - Open Prisma Studio (database management GUI)
 - `npm run db:seed` - Seed database with initial data
 - `npm run anonymize:staging` - Anonymize staging data for security
 
+## Performance Budgets
+
+To maintain optimal user experience, the following performance budgets are enforced:
+
+### Core Web Vitals Targets
+- **First Contentful Paint (FCP)**: < 1.8s
+- **Largest Contentful Paint (LCP)**: < 2.5s
+- **Time to Interactive (TTI)**: < 3.8s
+- **Total Blocking Time (TBT)**: < 300ms
+- **Cumulative Layout Shift (CLS)**: < 0.1
+- **First Input Delay (FID)**: < 100ms
+
+### Bundle Size Limits
+- **Initial JS Bundle**: < 300KB (gzipped)
+- **CSS Bundle**: < 50KB (gzipped)
+- **Total Page Weight**: < 1.5MB (including images)
+- **Individual Route Chunks**: < 150KB each
+
+### Optimization Strategies Applied
+- ✅ Code splitting with dynamic imports
+- ✅ Image optimization with Next.js Image component
+- ✅ Bundle analysis with @next/bundle-analyzer
+- ✅ SWR for data caching and deduplication
+- ✅ Lazy loading for heavy components (RichTextEditor, charts, PDF viewer)
+- ✅ Skeleton loading states for better perceived performance
+- ✅ IntersectionObserver for lazy-loading background media
+- ✅ Optimized package imports (react-icons)
+
+### Running Bundle Analysis
+```bash
+npm run analyze
+# Opens interactive bundle size visualization in browser
+```
+
 ## Key Features
 
 ### Security
-- ✅ Advanced security headers (CSP, HSTS, X-Frame-Options)
+- ✅ Advanced security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)
 - ✅ Rate limiting on critical endpoints
 - ✅ Input sanitization for all user inputs
 - ✅ Role-based access control (RBAC)
@@ -133,6 +169,7 @@ prisma/
 - ✅ Image optimization via Cloudinary CDN
 - ✅ Code splitting and lazy loading
 - ✅ Server-side rendering (SSR) and static generation
+- ✅ Custom toast system with auto-dismiss and animations
 
 ### Analytics & Reporting
 - ✅ Comprehensive analytics dashboard
