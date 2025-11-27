@@ -1,0 +1,93 @@
+name: Nightly DB Backup (Encrypted + Offsite)
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # 02:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL Client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Load Secrets
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+          echo "BACKUP_PROVIDER=${{ secrets.BACKUP_PROVIDER }}" >> $GITHUB_ENV
+          echo "BACKUP_ENCRYPTION_KEY_SET=${{ secrets.BACKUP_ENCRYPTION_KEY != '' }}" >> $GITHUB_ENV
+
+      - name: Parse Connection
+        id: parse
+        run: |
+          node <<'EOF'
+          const url = process.env.DATABASE_URL;
+          if(!url) { console.error('DATABASE_URL not set'); process.exit(1); }
+          const m = url.match(/^postgresql:\/\/(.*?):(.*?)@(.*?):(\d+)\/(.*?)(\?.*)?$/);
+          if(!m) { console.error('Cannot parse DATABASE_URL'); process.exit(1); }
+          const [,user,password,host,port,db] = [m[1],m[2],m[3],m[4],m[5]];
+          console.log(`::set-output name=user::${m[1]}`);
+          console.log(`::set-output name=password::${m[2]}`);
+          console.log(`::set-output name=host::${m[3]}`);
+          console.log(`::set-output name=port::${m[4]}`);
+          console.log(`::set-output name=db::${m[5]}`);
+          EOF
+
+      - name: Run pg_dump
+        env:
+          PGPASSWORD: ${{ steps.parse.outputs.password }}
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          pg_dump -h ${{ steps.parse.outputs.host }} -U ${{ steps.parse.outputs.user }} -p ${{ steps.parse.outputs.port }} -d ${{ steps.parse.outputs.db }} -Fc -f backup-$TIMESTAMP.dump
+          gzip backup-$TIMESTAMP.dump
+          echo "BACKUP_FILE=backup-$TIMESTAMP.dump.gz" >> $GITHUB_ENV
+          ls -lh backup-*.dump.gz
+
+      - name: Encrypt (AES-256)
+        if: env.BACKUP_ENCRYPTION_KEY_SET == 'true'
+        run: |
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in "$BACKUP_FILE" -out "$BACKUP_FILE.enc" -pass pass:${{ secrets.BACKUP_ENCRYPTION_KEY }}
+          shasum -a 256 "$BACKUP_FILE.enc" > "$BACKUP_FILE.enc.sha256"
+          echo "ENCRYPTED_FILE=$BACKUP_FILE.enc" >> $GITHUB_ENV
+          ls -lh "$BACKUP_FILE.enc"*
+
+      - name: Upload Artifact (Encrypted if available)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup
+          path: |
+            ${{ env.ENCRYPTED_FILE != '' && env.ENCRYPTED_FILE || env.BACKUP_FILE }}
+            ${{ env.ENCRYPTED_FILE != '' && format('{0}.sha256', env.ENCRYPTED_FILE) || '' }}
+          retention-days: 14
+
+      - name: Configure AWS Credentials
+        if: env.BACKUP_PROVIDER == 's3'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload to S3
+        if: env.BACKUP_PROVIDER == 's3'
+        run: |
+          TARGET_FILE=${ENCRYPTED_FILE:-$BACKUP_FILE}
+          aws s3 cp "$TARGET_FILE" "s3://${{ secrets.S3_BUCKET }}/db-backups/$TARGET_FILE"
+          [ -f "$TARGET_FILE.sha256" ] && aws s3 cp "$TARGET_FILE.sha256" "s3://${{ secrets.S3_BUCKET }}/db-backups/$TARGET_FILE.sha256" || true
+
+      - name: Azure CLI Login
+        if: env.BACKUP_PROVIDER == 'azure'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Upload to Azure Blob
+        if: env.BACKUP_PROVIDER == 'azure'
+        run: |
+          TARGET_FILE=${ENCRYPTED_FILE:-$BACKUP_FILE}
+          az storage blob upload --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} --account-key ${{ secrets.AZURE_STORAGE_KEY }} --container-name ${{ secrets.AZURE_CONTAINER }} --file "$TARGET_FILE" --name "db-backups/$TARGET_FILE" --overwrite true
+          [ -f "$TARGET_FILE.sha256" ] && az storage blob upload --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} --account-key ${{ secrets.AZURE_STORAGE_KEY }} --container-name ${{ secrets.AZURE_CONTAINER }} --file "$TARGET_FILE.sha256" --name "db-backups/$TARGET_FILE.sha256" --overwrite true || true

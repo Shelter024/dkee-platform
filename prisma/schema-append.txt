@@ -1,0 +1,57 @@
+
+model FileUpload {
+  id                  String             @id @default(cuid())
+  filename            String
+  originalName        String
+  mimeType            String
+  size                Int // bytes
+  url                 String
+  publicId            String? // Cloudinary or cloud provider ID
+  folder              String // Organized path: invoices/, service-photos/, documents/
+  shareableLink       String?
+  automotiveServiceId String?
+  automotiveService   AutomotiveService? @relation(fields: [automotiveServiceId], references: [id], onDelete: Cascade)
+  uploadedBy          String?
+  metadata            Json? // Additional cloud storage metadata
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@index([automotiveServiceId])
+  @@index([folder])
+  @@index([uploadedBy])
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String   // URL path (e.g., /blog/my-post, /automotive)
+  slug      String?  // For blog posts and pages
+  type      String?  // 'blog', 'page', 'home', 'automotive', etc.
+  userId    String?  // Optional: track logged-in users
+  sessionId String?  // Anonymous session tracking
+  ipAddress String?
+  userAgent String?
+  referer   String?  // Where did they come from
+  country   String?  // Geo location (if available)
+  createdAt DateTime @default(now())
+
+  @@index([path])
+  @@index([slug])
+  @@index([type])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model SystemSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g., 'ai_provider', 'openai_api_key', 'smtp_host'
+  value     String   @db.Text // Encrypted sensitive values
+  category  String   // 'ai', 'email', 'sms', 'storage', 'general'
+  isSecret  Boolean  @default(false) // Whether to encrypt the value
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([key])
+}

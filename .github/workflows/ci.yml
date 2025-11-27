@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Copy example env
+        run: cp .env.example .env
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Build
+        run: npm run build
+
+      - name: NPM Audit (High severity)
+        run: npm audit --audit-level=high || (echo "High severity vulnerabilities detected" && exit 1)
+
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@v0.13.1
+        with:
+          scan-type: 'fs'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
+          format: 'table'
+          vuln-type: 'os,library'
+
+      - name: Prisma Validate
+        run: npx prisma validate
+
+      # Placeholder for tests (none defined). Add jest / vitest here when available.
+
+      - name: Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next
+
+  container-image:
+    if: github.ref == 'refs/heads/main'
+    needs: build-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Image
+        run: docker build -t ghcr.io/${{ github.repository }}:latest .
+
+      - name: Trivy Image Scan (Pre-Push)
+        uses: aquasecurity/trivy-action@v0.13.1
+        with:
+          image-ref: 'ghcr.io/${{ github.repository }}:latest'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
+          format: 'table'
+          vuln-type: 'os,library'
+
+      - name: Push Image
+        run: docker push ghcr.io/${{ github.repository }}:latest

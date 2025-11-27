@@ -1,0 +1,14 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/reminder-notifications",
+      "schedule": "0 9 * * *"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database-url",
+    "NEXTAUTH_SECRET": "@nextauth-secret",
+    "SETTINGS_ENCRYPTION_KEY": "@settings-encryption-key",
+    "CRON_SECRET": "@cron-secret"
+  }
+}

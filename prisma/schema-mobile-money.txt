@@ -1,0 +1,66 @@
+// Add to schema.prisma after existing enums
+
+enum PaymentMethod {
+  CARD
+  MOBILE_MONEY_MTN
+  MOBILE_MONEY_VODAFONE
+  MOBILE_MONEY_AIRTELTIGO
+  BANK_TRANSFER
+  CASH
+}
+
+enum MobileMoneyProvider {
+  MTN
+  VODAFONE
+  AIRTELTIGO
+}
+
+enum PaymentChannel {
+  CARD
+  MOBILE_MONEY
+  BANK_TRANSFER
+  USSD
+  BANK
+}
+
+// Add this new model for tracking all payment transactions
+model PaymentTransaction {
+  id                String          @id @default(cuid())
+  reference         String          @unique
+  amount            Float
+  currency          String          @default("GHS")
+  channel           PaymentChannel
+  paymentMethod     PaymentMethod?
+  mobileMoneyNumber String?
+  provider          MobileMoneyProvider?
+  status            String          @default("pending") // pending, success, failed, abandoned
+  gatewayResponse   Json?
+  
+  // Relations
+  invoiceId         String?
+  invoice           Invoice?        @relation(fields: [invoiceId], references: [id])
+  customerId        String
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  processedBy       String?
+  processor         User?           @relation(fields: [processedBy], references: [id])
+  
+  // Metadata
+  paidAt            DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([reference])
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Update Invoice model - add this relation:
+// paymentTransactions PaymentTransaction[]
+
+// Update Customer model - add this relation:
+// paymentTransactions PaymentTransaction[]
+
+// Update User model - add this relation:
+// processedPayments PaymentTransaction[]

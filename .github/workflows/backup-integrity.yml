@@ -1,0 +1,75 @@
+name: Backup Integrity Verification
+
+on:
+  schedule:
+    - cron: '0 4 * * 1' # 04:00 UTC every Monday
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Env
+        run: |
+          echo "BACKUP_PROVIDER=${{ secrets.BACKUP_PROVIDER }}" >> $GITHUB_ENV
+          echo "BACKUP_ENCRYPTION_KEY=${{ secrets.BACKUP_ENCRYPTION_KEY }}" >> $GITHUB_ENV
+          echo "S3_BUCKET=${{ secrets.S3_BUCKET }}" >> $GITHUB_ENV
+          echo "AZURE_CONTAINER=${{ secrets.AZURE_CONTAINER }}" >> $GITHUB_ENV
+          echo "AZURE_STORAGE_ACCOUNT=${{ secrets.AZURE_STORAGE_ACCOUNT }}" >> $GITHUB_ENV
+          echo "AZURE_STORAGE_KEY=${{ secrets.AZURE_STORAGE_KEY }}" >> $GITHUB_ENV
+
+      - name: Configure AWS (S3)
+        if: env.BACKUP_PROVIDER == 's3'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install Azure CLI
+        if: env.BACKUP_PROVIDER == 'azure'
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Fetch Latest Backup (S3)
+        if: env.BACKUP_PROVIDER == 's3'
+        run: |
+          LATEST=$(aws s3 ls s3://$S3_BUCKET/db-backups/ | awk '{print $4}' | sort | tail -1)
+          if [ -z "$LATEST" ]; then echo "No backups found" && exit 1; fi
+          echo "Latest: $LATEST"
+          aws s3 cp "s3://$S3_BUCKET/db-backups/$LATEST" backup.file
+          if aws s3 ls "s3://$S3_BUCKET/db-backups/$LATEST.sha256"; then aws s3 cp "s3://$S3_BUCKET/db-backups/$LATEST.sha256" backup.sha256; fi
+          ls -lh
+
+      - name: Fetch Latest Backup (Azure)
+        if: env.BACKUP_PROVIDER == 'azure'
+        run: |
+          az storage blob list --account-name "$AZURE_STORAGE_ACCOUNT" --account-key "$AZURE_STORAGE_KEY" --container-name "$AZURE_CONTAINER" --prefix db-backups/ --query "[].name" -o tsv | sort | tail -1 > latest.txt
+          LATEST=$(cat latest.txt)
+          if [ -z "$LATEST" ]; then echo "No backups found" && exit 1; fi
+          echo "Latest: $LATEST"
+          az storage blob download --account-name "$AZURE_STORAGE_ACCOUNT" --account-key "$AZURE_STORAGE_KEY" --container-name "$AZURE_CONTAINER" --name "$LATEST" --file backup.file --overwrite true
+          if az storage blob exists --account-name "$AZURE_STORAGE_ACCOUNT" --account-key "$AZURE_STORAGE_KEY" --container-name "$AZURE_CONTAINER" --name "$LATEST.sha256" --query exists -o tsv | grep -q true; then az storage blob download --account-name "$AZURE_STORAGE_ACCOUNT" --account-key "$AZURE_STORAGE_KEY" --container-name "$AZURE_CONTAINER" --name "$LATEST.sha256" --file backup.sha256 --overwrite true; fi
+          ls -lh
+
+      - name: Verify Checksum
+        run: |
+          if [ -f backup.sha256 ]; then sha256sum -c backup.sha256; else echo "No checksum file; continuing"; fi
+
+      - name: Attempt Decrypt (if encrypted)
+        run: |
+          FILE=backup.file
+          if [[ "$FILE" == *.enc ]]; then
+            if [ -z "$BACKUP_ENCRYPTION_KEY" ]; then echo "Missing BACKUP_ENCRYPTION_KEY" && exit 1; fi
+            openssl enc -d -aes-256-cbc -pbkdf2 -in "$FILE" -out decrypted.dump.gz -pass pass:"$BACKUP_ENCRYPTION_KEY"
+            gunzip decrypted.dump.gz
+            ls -lh
+          else
+            echo "File not encrypted (legacy or key unset)."
+          fi
+
+      - name: Success Marker
+        run: echo "Backup integrity verification succeeded"
