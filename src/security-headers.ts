@@ -11,32 +11,37 @@ export function middleware(req: NextRequest) {
     'Content-Security-Policy',
     [
       "default-src 'self';",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com;",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://js.pusher.com;",
       "style-src 'self' 'unsafe-inline';",
-      "img-src 'self' data: blob: https://*;",
+      "img-src 'self' data: blob: https://* https://res.cloudinary.com;",
       "font-src 'self' data:;",
-      "connect-src 'self' https://*;",
+      "connect-src 'self' https://* wss://*;",
+      "media-src 'self' https://res.cloudinary.com;",
       "frame-src 'self';",
       "object-src 'none';",
       "base-uri 'self';",
-      "form-action 'self';"
+      "form-action 'self';",
+      "upgrade-insecure-requests;"
     ].join(' ')
   );
 
-  // HTTP Strict Transport Security (HSTS)
-  res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  // HTTP Strict Transport Security (HSTS) - 1 year with subdomains
+  res.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
 
-  // X-Frame-Options
-  res.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  // X-Frame-Options - prevent clickjacking
+  res.headers.set('X-Frame-Options', 'DENY');
 
-  // X-Content-Type-Options
+  // X-Content-Type-Options - prevent MIME sniffing
   res.headers.set('X-Content-Type-Options', 'nosniff');
+
+  // X-DNS-Prefetch-Control - control DNS prefetching
+  res.headers.set('X-DNS-Prefetch-Control', 'on');
 
   // Referrer Policy
   res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   // Permissions Policy (formerly Feature Policy)
-  res.headers.set('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
+  res.headers.set('Permissions-Policy', 'geolocation=(), camera=(), microphone=(), payment=()');
 
   return res;
 }
