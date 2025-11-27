@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface BackgroundMediaProps {
   media?: string | null; // URL or JSON array for slideshow
@@ -23,6 +23,32 @@ export function BackgroundMedia({
 }: BackgroundMediaProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<string[]>([]);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (type === 'slideshow' && media) {
@@ -82,10 +108,10 @@ export function BackgroundMedia({
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div ref={containerRef} className={`relative ${className}`}>
       {/* Background Layer */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        {type === 'video' ? (
+        {isVisible && type === 'video' ? (
           <>
             <video
               autoPlay
@@ -105,7 +131,7 @@ export function BackgroundMedia({
               }}
             />
           </>
-        ) : (
+        ) : isVisible ? (
           <>
             {/* Image/Slideshow Background */}
             <div
@@ -123,7 +149,7 @@ export function BackgroundMedia({
               }}
             />
           </>
-        )}
+        ) : null}
       </div>
 
       {/* Content */}
