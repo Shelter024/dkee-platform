@@ -8,6 +8,7 @@ import { FileText, Download, Eye, DollarSign, Calendar, CheckCircle, ChevronDown
 import dynamic from 'next/dynamic';
 import Skeleton from '@/components/ui/Skeleton';
 import { useInvoices } from '@/hooks/useSWR';
+import { useToast } from '@/components/providers/ToastProvider';
 const PdfViewerModal = dynamic(() => import('@/components/pdf/PdfViewerModal').then(m => m.PdfViewerModal), { ssr: false, loading: () => <Skeleton lines={6} /> });
 
 type ApiInvoice = {
@@ -30,6 +31,7 @@ type ApiInvoice = {
 };
 
 export default function CustomerInvoices() {
+  const { error: showError } = useToast();
   const { invoices, isLoading, isError } = useInvoices();
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
@@ -81,9 +83,9 @@ export default function CustomerInvoices() {
   };
   const { totalPaid, totalOutstanding } = useMemo(() => {
     const paid = invoices
-      .filter((i) => i.paymentStatus === 'PAID')
-      .reduce((sum, i) => sum + (i.amountPaid || 0), 0);
-    const outstanding = invoices.reduce((sum, i) => sum + Math.max(i.total - (i.amountPaid || 0), 0), 0);
+      .filter((i: ApiInvoice) => i.paymentStatus === 'PAID')
+      .reduce((sum: number, i: ApiInvoice) => sum + (i.amountPaid || 0), 0);
+    const outstanding = invoices.reduce((sum: number, i: ApiInvoice) => sum + Math.max(i.total - (i.amountPaid || 0), 0), 0);
     return { totalPaid: paid, totalOutstanding: outstanding };
   }, [invoices]);
 
@@ -101,7 +103,7 @@ export default function CustomerInvoices() {
       if (!res.ok) throw new Error(data?.error || 'Payment init failed');
       window.location.href = data.authorizationUrl;
     } catch (e) {
-      setError((e as Error).message);
+      showError((e as Error).message);
     } finally {
       setPayLoadingId(null);
     }

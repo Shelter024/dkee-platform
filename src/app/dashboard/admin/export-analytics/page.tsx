@@ -1,7 +1,7 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import Skeleton from '@/components/ui/Skeleton';
-const ExportAnalyticsCompare = dynamic(() => import('@/components/admin/ExportAnalyticsCompare'), { ssr: false, loading: () => <Skeleton lines={12} /> });
+const ExportAnalyticsCompare = dynamic(() => import('@/components/admin/ExportAnalyticsCompare').then(mod => ({ default: mod.ExportAnalyticsCompare })), { ssr: false, loading: () => <Skeleton lines={12} /> });
 
 async function getAnalytics(days: number) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/export/analytics?days=${days}`, {
