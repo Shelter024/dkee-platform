@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
@@ -91,9 +92,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-neutral-100 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img 
-            src="/logo.png" 
-            alt="DK Executive Engineers" 
+          <Image
+            src="/logo.png"
+            alt="DK Executive Engineers"
+            width={64}
+            height={64}
+            priority
             className="h-16 w-auto mx-auto mb-4"
           />
           <h1 className="text-3xl font-bold text-brand-navy-900">Welcome Back</h1>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
@@ -42,9 +43,12 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <img 
-                src="/logo.png" 
-                alt="DK Executive Engineers" 
+              <Image
+                src="/logo.png"
+                alt="DK Executive Engineers"
+                width={40}
+                height={40}
+                priority
                 className="h-10 w-auto"
               />
               <div className="hidden sm:block">
