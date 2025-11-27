@@ -52,6 +52,7 @@
     "react-hot-toast": "^2.4.1",
     "recharts": "^3.4.1",
     "resend": "^6.5.2",
+    "swr": "^2.3.6",
     "tailwind-merge": "^2.4.0",
     "twilio": "^5.10.6",
     "zod": "^3.23.0"

@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { FileText, Download, Eye, DollarSign, Calendar, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Skeleton from '@/components/ui/Skeleton';
+import { useInvoices } from '@/hooks/useSWR';
 const PdfViewerModal = dynamic(() => import('@/components/pdf/PdfViewerModal').then(m => m.PdfViewerModal), { ssr: false, loading: () => <Skeleton lines={6} /> });
 
 type ApiInvoice = {
@@ -29,35 +30,12 @@ type ApiInvoice = {
 };
 
 export default function CustomerInvoices() {
-  const [invoices, setInvoices] = useState<ApiInvoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { invoices, isLoading, isError } = useInvoices();
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerTitle, setViewerTitle] = useState<string>('');
   const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<Record<string, any[]>>({});
-
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/invoices');
-        if (!res.ok) throw new Error('Failed to fetch invoices');
-        const data = await res.json();
-        if (mounted) setInvoices(data.invoices || []);
-      } catch (e: any) {
-        if (mounted) setError(e.message || 'Error loading invoices');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-GH', {
@@ -207,17 +185,17 @@ export default function CustomerInvoices() {
         </div>
 
       {/* Loading / Error */}
-      {loading && (
+      {isLoading && (
         <Card>
           <CardBody>
-            <p className="text-gray-600">Loading invoices...</p>
+            <Skeleton lines={5} />
           </CardBody>
         </Card>
       )}
-      {error && (
+      {isError && (
         <Card>
           <CardBody>
-            <p className="text-red-600">{error}</p>
+            <p className="text-red-600">Failed to load invoices. Please refresh the page.</p>
           </CardBody>
         </Card>
       )}
