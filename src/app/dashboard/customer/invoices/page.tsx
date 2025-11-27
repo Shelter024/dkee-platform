@@ -5,7 +5,9 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { FileText, Download, Eye, DollarSign, Calendar, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { PdfViewerModal } from '@/components/pdf/PdfViewerModal';
+import dynamic from 'next/dynamic';
+import Skeleton from '@/components/ui/Skeleton';
+const PdfViewerModal = dynamic(() => import('@/components/pdf/PdfViewerModal').then(m => m.PdfViewerModal), { ssr: false, loading: () => <Skeleton lines={6} /> });
 
 type ApiInvoice = {
   id: string;
