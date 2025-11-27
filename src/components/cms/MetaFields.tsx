@@ -159,10 +159,11 @@ export default function MetaFields({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Scheduled Publish */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="scheduled-publish" className="block text-sm font-medium text-gray-700 mb-2">
                   Schedule Publish
                 </label>
                 <input
+                  id="scheduled-publish"
                   type="datetime-local"
                   value={scheduledPublishAt}
                   onChange={(e) => onChange('scheduledPublishAt', e.target.value)}
@@ -175,10 +176,11 @@ export default function MetaFields({
 
               {/* Scheduled Unpublish */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="scheduled-unpublish" className="block text-sm font-medium text-gray-700 mb-2">
                   Schedule Unpublish
                 </label>
                 <input
+                  id="scheduled-unpublish"
                   type="datetime-local"
                   value={scheduledUnpublishAt}
                   onChange={(e) => onChange('scheduledUnpublishAt', e.target.value)}

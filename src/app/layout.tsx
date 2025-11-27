@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ActivityTracker />
               <DynamicBackground pageType={pageType}>
                 <Navbar />
-                <main className="flex-grow">{children}</main>
+                <main role="main" className="flex-grow">{children}</main>
                 <Footer />
               </DynamicBackground>
             </ToastProvider>

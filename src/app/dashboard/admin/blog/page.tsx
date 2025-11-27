@@ -232,8 +232,9 @@ export default function BlogPage() {
           <CardBody>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Title *</label>
+                <label htmlFor="blog-title" className="block text-sm font-medium mb-2">Title *</label>
                 <input
+                  id="blog-title"
                   type="text"
                   value={formData.title}
                   onChange={(e) => {
@@ -253,8 +254,9 @@ export default function BlogPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Slug *</label>
+                <label htmlFor="blog-slug" className="block text-sm font-medium mb-2">Slug *</label>
                 <input
+                  id="blog-slug"
                   type="text"
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}

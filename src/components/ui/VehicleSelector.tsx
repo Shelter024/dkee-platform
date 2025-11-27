@@ -81,10 +81,11 @@ export function VehicleSelector({
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Make Selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="vehicle-make" className="block text-sm font-medium text-gray-700 mb-1">
           Make <span className="text-red-600">*</span>
         </label>
         <select
+          id="vehicle-make"
           value={selectedMake}
           onChange={handleMakeChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-navy-500 focus:border-transparent"
@@ -112,10 +113,11 @@ export function VehicleSelector({
 
       {/* Model Selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="vehicle-model" className="block text-sm font-medium text-gray-700 mb-1">
           Model <span className="text-red-600">*</span>
         </label>
         <select
+          id="vehicle-model"
           value={selectedModel}
           onChange={handleModelChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-navy-500 focus:border-transparent"
@@ -144,10 +146,11 @@ export function VehicleSelector({
 
       {/* Year Selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="vehicle-year" className="block text-sm font-medium text-gray-700 mb-1">
           Year <span className="text-red-600">*</span>
         </label>
         <select
+          id="vehicle-year"
           value={selectedYear}
           onChange={handleYearChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-navy-500 focus:border-transparent"

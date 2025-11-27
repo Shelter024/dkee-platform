@@ -357,8 +357,9 @@ export default function PagesManagement() {
 
             {/* Category Dropdown */}
             <div>
-              <label className="block text-sm font-medium mb-2">Category</label>
+              <label htmlFor="page-category" className="block text-sm font-medium mb-2">Category</label>
               <select
+                id="page-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -372,8 +373,9 @@ export default function PagesManagement() {
 
             {/* Template Dropdown */}
             <div>
-              <label className="block text-sm font-medium mb-2">Template</label>
+              <label htmlFor="page-template" className="block text-sm font-medium mb-2">Template</label>
               <select
+                id="page-template"
                 value={template}
                 onChange={(e) => setTemplate(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -657,6 +659,8 @@ export default function PagesManagement() {
             <div className="relative">
               <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <select
+                id="category-filter"
+                aria-label="Filter by category"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="w-full pl-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
